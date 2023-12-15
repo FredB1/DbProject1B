@@ -107,7 +107,33 @@ def members_with_long_overdue_books(conn):
     overdue_loans = cur.fetchall()
     for loan in overdue_loans:
         print(loan)
+def checkout_book(conn, m_id, isbn, copy_num):
+    """ Function to manually check out a book """
+    sql = '''
+    INSERT INTO Loan (M_ID, ISBN, Copy_Num, ChkOut_Date, Due_Date)
+    VALUES (?, ?, ?, ?, ?)
+    '''
+    chkout_date = datetime.date.today()
+    due_date = chkout_date + datetime.timedelta(days=21) 
 
+    cur = conn.cursor()
+    cur.execute(sql, (m_id, isbn, copy_num, chkout_date, due_date))
+    conn.commit()
+    print(f"Book with ISBN {isbn} checked out to member {m_id}. Due date: {due_date}")
+
+def update_record(conn, table, column_to_update, new_value, key_column, key_value):
+    """ Generic function to update a record in a table """
+    sql = f'UPDATE {table} SET {column_to_update} = ? WHERE {key_column} = ?'
+    cur = conn.cursor()
+    cur.execute(sql, (new_value, key_value))
+    conn.commit()
+
+def delete_record(conn, table, column, value):
+    """ Generic function to delete a record from a table """
+    sql = f'DELETE FROM {table} WHERE {column} = ?'
+    cur = conn.cursor()
+    cur.execute(sql, (value,))
+    conn.commit()
 def main():
     database = "pythonsqlite.db"
     conn = create_connection(database)
@@ -121,8 +147,11 @@ def main():
             print("4. List of Inactive Members")
             print("5. Most Popular Books")
             print("6. Members With Long Overdue Books")
-            print("7. Exit")
-            choice = input("Enter your choice (1-7): ")
+            print("7. Checkout a book")
+            print("8. Update a record")
+            print("9. Delete a record")
+            print("0. Exit")
+            choice = input("Enter your choice (1-8): ")
 
             if choice == '1':
                 member_id = input("Enter Member ID: ")
@@ -138,6 +167,23 @@ def main():
             elif choice == '6':
                 members_with_long_overdue_books(conn)
             elif choice == '7':
+                m_id = input("Enter Member ID: ")
+                isbn = input("Enter Book ISBN: ")
+                copy_num = input("Enter Copy Number: ")
+                checkout_book(conn, m_id, isbn, copy_num)
+            elif choice == '8':
+                table = input("Enter the table name to update: ")
+                column_to_update = input(f"Enter the column name in {table} to update: ")
+                new_value = input(f"Enter the new value for {column_to_update}: ")
+                key_column = input(f"Enter the key column name in {table} to match: ")
+                key_value = input(f"Enter the value of {key_column} to update: ")
+                update_record(conn, table, column_to_update, new_value, key_column, key_value)
+            elif choice == '9':
+                table = input("Enter the table name to delete from: ")
+                column = input(f"Enter the column name in {table} to match: ")
+                value = input(f"Enter the value of {column} to delete: ")
+                delete_record(conn, table, column, value)
+            elif choice == '0':
                 print("Exiting the program.")
                 break
             else:
